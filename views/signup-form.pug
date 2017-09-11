@@ -1,0 +1,9 @@
+extends layout.pug
+block content
+  form(action="/auth/signup", method="POST")
+      h1 Signup
+      p
+        input(type="text", name="username", placeholder="Username: ")
+      p
+        input(type="password", name="password", placeholder="Password: ")
+      button(type="submit") Signup!

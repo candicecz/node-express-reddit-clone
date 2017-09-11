@@ -25,7 +25,6 @@ var myReddit = new RedditAPI(connection);
 
 // Create a new Express web server
 var app = express();
-
 // Specify the usage of the Pug template engine
 app.set('view engine', 'pug');
 
@@ -55,11 +54,7 @@ This custom middleware checks in the cookies if there is a SESSION token and val
 NOTE: This middleware is currently commented out! Uncomment it once you've implemented the RedditAPI
 method `getUserFromSession`
  */
-// app.use(checkLoginToken(myReddit));
-
-
-
-
+app.use(checkLoginToken(myReddit));
 
 /*
 app.use can also take a path prefix as a parameter. the next app.use says that anytime the request URL
@@ -96,7 +91,12 @@ app.use('/static', express.static(__dirname + '/public'));
 
 // Regular home Page
 app.get('/', function(request, response) {
-    myReddit.getAllPosts()
+    var queryObj = {
+      username: null,
+      subredditId:null,
+      sortingMethod:null
+    }
+    myReddit.getAllPosts(queryObj)
     .then(function(posts) {
         response.render('homepage', {posts: posts});
     })
@@ -107,28 +107,108 @@ app.get('/', function(request, response) {
 
 // Listing of subreddits
 app.get('/subreddits', function(request, response) {
-    /*
-    1. Get all subreddits with RedditAPI
-    2. Render some HTML that lists all the subreddits
-     */
-    
-    response.send("TO BE IMPLEMENTED");
+  myReddit.getAllSubreddits()
+  .then(subreddits => {
+    response.render('subreddits', {subreddits: subreddits});
+  })
 });
 
 // Subreddit homepage, similar to the regular home page but filtered by sub.
 app.get('/r/:subreddit', function(request, response) {
-    response.send("TO BE IMPLEMENTED");
+  myReddit.getSubredditByName(request.params.subreddit)
+  .then(result => {
+    if(!result){
+      response.sendStatus(404)
+    }
+    else {
+      var queryObj = {
+        username: null,
+        subredditId: result.id || null,
+        sortingMethod:null
+      }
+      return myReddit.getAllPosts(queryObj)
+    }
+  })
+  .then(post => {
+    response.render('homepage', {posts: post});
+  })
+  .catch(function(error){
+    response.render('error', {error:error})
+  })
+
 });
 
 // Sorted home page
 app.get('/sort/:method', function(request, response) {
-    response.send("TO BE IMPLEMENTED");
+  var queryObj = {
+    username: null,
+    subredditId: null,
+    sortingMethod:request.params.method || null
+  }
+  myReddit.getAllPosts(queryObj)
+  .then(function(posts) {
+      response.render('homepage', {posts: posts});
+  })
 });
 
 app.get('/post/:postId', function(request, response) {
-    response.send("TO BE IMPLEMENTED");
-});
+    Promise.all([
+      myReddit.getSinglePost(request.params.postId),
+      myReddit.getCommentsForPost(request.params.postId)
+    ])
+    .then(postInfo => {
+      if(postInfo === null){
+        response.status(404).send("post error")
+      }
+      else {
+        var post = postInfo[0];
+        var comment = postInfo[1]
+        response.render('display-post', {posts:post, comments:comment});
+      }
+    })
 
+    .catch(error => {
+      response.render('error', {error:error})
+    })
+});
+//FINISH THIS
+app.get('/u/:username', function(request, response) {
+  console.log(request.params.username, 'params')
+  var queryObj = {
+    username: request.params.username,
+    subredditId: null,
+    sortingMethod:request.params.method || null
+  }
+  myReddit.getAllPosts(queryObj)
+  .then(function(posts) {
+      response.render('homepage', {posts: posts});
+  })
+  .catch(error => {
+    response.render('error',{error:error})
+  })
+});
+// app.get('/u/:username', function(request, response) {
+//   myReddit.getAllPostsForUsername(request.params.username)
+//   .then(posts => {
+//     return posts.map(post => {
+//       return{
+//         postId:post.id,
+//         user: {user: post.username},
+//         title: post.title,
+//         url: post.url,
+//         createdAt: post.createdAt
+//       }
+//     })
+//   }).then(posts => {
+//     console.log(posts)
+//     response.render('homepage', {posts: posts});
+//     })
+//   .catch(error => {
+//     response.render('error',{error:error})
+//   })
+// });
+// console.log(userPost, 'kjkfhvk')
+// response.render('homepage', {posts: posts});
 /*
 This is a POST endpoint. It will be called when a form is submitted with method="POST" action="/vote"
 The goal of this endpoint is to receive an up/down vote by a logged in user.
@@ -138,28 +218,48 @@ The app.* methods of express can actually take multiple middleware, forming a ch
 This basically says: if there is a POST /vote request, first pass it thru the onlyLoggedIn middleware. If that
 middleware calls next(), then also pass it to the final request handler specified.
  */
+
 app.post('/vote', onlyLoggedIn, function(request, response) {
-    response.send("TO BE IMPLEMENTED");
+  var vote = {
+    postId:+request.body.postId,
+    userId: +request.body.userId,
+    voteDirection:+request.body.vote
+  }
+  return myReddit.createVote(vote)
+  .then(result => {
+    return response.redirect('/');
+  })
+  .catch(error => {
+    console.log("Error executing vote")
+    return error
+  })
 });
 
 // This handler will send out an HTML form for creating a new post
 app.get('/createPost', onlyLoggedIn, function(request, response) {
-    response.send("TO BE IMPLEMENTED");
+  return myReddit.getAllSubreddits()
+  .then(subreddits => {
+    response.render('create-post-form', {subreddits: subreddits}); //render a page using the template create post form where subreddits is equal to result
+  })
 });
 
 // POST handler for form submissions creating a new post
 app.post('/createPost', onlyLoggedIn, function(request, response) {
-    response.send("TO BE IMPLEMENTED");
+  var formInfo = {
+    userId: request.loggedInUser.id,
+    title: request.body.title,
+    url: request.body.url,
+    subredditId: +request.body.subredditId
+  }
+  myReddit.createPost(formInfo)
+  .then(post => {
+    return response.redirect('/post/'+post)
+  })
 });
 
 // Listen
 var port = process.env.PORT || 3000;
 app.listen(port, function() {
     // This part will only work with Cloud9, and is meant to help you find the URL of your web server :)
-    if (process.env.C9_HOSTNAME) {
-        console.log('Web server is listening on https://' + process.env.C9_HOSTNAME);
-    }
-    else {
         console.log('Web server is listening on http://localhost:' + port);
-    }
 });

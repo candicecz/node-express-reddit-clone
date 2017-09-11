@@ -1,0 +1,8 @@
+mixin subredditList(subreddits)
+    ul.subreddit-list
+    each subreddit in subreddits
+        li.subreddit
+          p #{subreddit.name}
+          p #{subreddit.description}
+
+          

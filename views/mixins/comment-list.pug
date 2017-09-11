@@ -1,0 +1,9 @@
+mixin commentList(comments)
+    ul.comment-list
+    each comment in comments
+        li.comment
+          p #{comment.text}
+          p #{comment.user.username}
+          p submitted: #{comment.createdAt}
+          
+            

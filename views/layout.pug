@@ -4,17 +4,20 @@ html
         meta(charset="utf-8")
         link(rel="stylesheet", href="/static/app.css")
         block title
-            title Redit Clone
+            title Reddit Clone
     body
         header
+          h2
             if loggedInUser
-                p Welcome #{loggedInUser.username}
+                p(class= 'hello') Hi #{loggedInUser.username}!
+
             else
                 ul
                     li
                         a(href="/auth/signup") Signup
                     li
                         a(href="/auth/login") Login
+
         main
             block content
         footer &copy; 2017 blah

@@ -1,0 +1,45 @@
+body {
+    font-family: Helvetica, arial, sans-serif;
+    color:#545252;
+    background-color: #dce3ed;
+    width:50%
+
+}
+a {
+  text-decoration:none;
+}
+a:hover{
+  color:#ff759c;
+}
+
+li{
+   list-style: none;
+   background:#fff ;
+   border-radius:15px;
+   padding: 3% 10%;
+   margin-bottom: 5%;
+}
+.list{
+  color:#070c14;
+  font-size: 20px;
+  color:#657791;
+
+}
+
+.newk{
+  color:#070c14;
+  text-decoration:none;
+}
+
+header{
+  color:white;
+}
+
+.score{
+  color:#657791;
+}
+
+.hello{
+  font-size: 25px;
+  color:#ff759c;
+}

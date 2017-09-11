@@ -1,0 +1,9 @@
+extends layout.pug
+block content
+  form(action="/auth/login", method="POST")
+      h1 Login
+      p
+        input(type="text", name="username", placeholder="Username: ")
+      p
+        input(type="password", name="password", placeholder="Password: ")
+      button(type="submit") Login!

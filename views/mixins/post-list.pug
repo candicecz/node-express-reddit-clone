@@ -3,9 +3,16 @@ mixin postList(posts)
         each post in posts
             li.post
                 h2
-                    a(href=post.url, target="_blank")= post.title
-                    p Submitted by
-                        a(href="/u/" + post.user.username)= post.user.username
-                        span  in
-                        a(href="/r/" + post.subreddit.name) /r/#{post.subreddit.name}
-                    p Score: #{post.voteScore} Upvotes: #{post.numUpvotes} Downvotes: #{post.numDownvotes}
+                    a(class= 'newk' href=post.url, target="_blank")= post.title
+                p Submitted by 
+                    a(class= 'newk' href="/u/" + post.user.username)= post.user.username
+                    span  in 
+                    a(class= 'newk' href="/r/" + post.subreddit.name) /r/#{post.subreddit.name}
+                p(class= 'score') Score: #{post.voteScore} Upvotes: #{post.numUpvotes} Downvotes: #{post.numDownvotes}
+                form(action="/vote", method="POST")
+                  p
+                    input(type="hidden", name="postId", value=post.id)
+                    input(type="hidden", name="userId", value=post.user.id)
+                    button(type="submit", name="vote", value="1") Upvote
+                    button(type="submit", name="vote", value="-1") DownVote
+//-implement comments click thing here so you could open the post page

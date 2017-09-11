@@ -1,0 +1,11 @@
+include mixins/comment-list
+block title
+      title Welcome to Reddit Clone!!!
+
+block content
+    h1 #{posts.title}
+    p #{posts.url}
+    p submitted: #{posts.createdAt}
+    p by #{posts.user.username}
+    
+    +commentList(comments)
